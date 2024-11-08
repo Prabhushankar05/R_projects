@@ -1,0 +1,83 @@
+---
+title: "Final_submission"
+author: "Prabhu Shankar, Avinash, Manideep. Group 5"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+
+```{r}
+data <- read.csv("/Users/prabhushankar/Desktop/projects/Final_data.csv") 
+data_clean <- data[, colSums(is.na(data)) != nrow(data)]
+
+
+
+data_clean$ZIP.code <- as.character(data_clean$ZIP.code)
+
+
+data_clean <- data_clean[grepl("^\\d{5}$", data_clean$ZIP.code), ]
+
+
+data_clean$ZIP.code <- as.numeric(data_clean$ZIP.code)
+
+
+data_clean <- na.omit(data_clean)
+
+
+unique_counts <- sapply(data_clean, function(x) length(unique(x)))
+data_clean <- data_clean[, unique_counts > 1]
+
+
+data_clean$Company <- as.factor(data_clean$Company)
+data_clean$State <- as.factor(data_clean$State)
+
+
+
+print(head(data_clean))
+data_clean$Product <- as.numeric(as.factor(data_clean$Product))
+
+
+linear_model <- lm(Product ~ Tags + Issue + State  , data = data_clean)
+
+
+summary(linear_model)
+plot(linear_model)
+
+
+tags_model <- lm(Product ~ Tags  , data = data_clean)
+summary(tags_model)
+
+
+Issue_model <- lm(Product ~ Issue  , data = data_clean)
+summary(Issue_model)
+
+state_model <- lm(Product ~ Issue  , data = data_clean)
+summary(state_model)
+
+
+data$target <- ifelse(data$Product == "Credit card", 1, 0)
+
+
+data$Company <- as.factor(data$Company)
+data$State <- as.factor(data$State)
+data$Tags <- as.factor(data$Tags)
+data$Issue <- as.factor(data$Issue)
+
+
+model <- glm(target ~ State + Tags + Issue, data = data, family = binomial)
+
+
+summary(model)
+
+
+predicted_probabilities <- predict(model, type = "response")
+
+predicted_classes <- ifelse(predicted_probabilities > 0.5, 1, 0)
+
+
+confusion_matrix <- table(Predicted = predicted_classes, Actual = data$target)
+
+
+print(confusion_matrix)
+```
+
